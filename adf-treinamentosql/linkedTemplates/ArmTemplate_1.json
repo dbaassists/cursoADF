@@ -1,0 +1,78 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-treinamentosql"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/PIP_00_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LOAD_FILE_ONPREMISE_TO_BLOB",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PIP_01_GET_METADATA",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"diretorio": {
+									"value": "@pipeline().parameters.diretorio",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "LOAD_FILE_BLOB_TO_ASQL",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "LOAD_FILE_ONPREMISE_TO_BLOB",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PIP_02_LOAD_FILE_BLOB_ASQL",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"diretorio": {
+						"type": "string",
+						"defaultValue": "Arquivos_Dados"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-05-25T12:10:12Z"
+			},
+			"dependsOn": []
+		}
+	]
+}

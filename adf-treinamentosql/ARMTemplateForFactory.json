@@ -1,0 +1,1953 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-treinamentosql"
+		},
+		"LS_AZURE_SQL_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_AZURE_SQL'"
+		},
+		"LS_BLOB_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_BLOB'"
+		},
+		"LS_FILE_ONPREMISE_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_FILE_ONPREMISE'"
+		},
+		"LS_FILE_ONPREMISE_PARAM_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_FILE_ONPREMISE_PARAM'"
+		},
+		"LS_SQLSERVER_ONPREMISE_PARAM_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_SQLSERVER_ONPREMISE_PARAM'"
+		},
+		"LS_FILE_ONPREMISE_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "\\\\DESKTOP-NAFOKAU\\Curso_ADF"
+		},
+		"LS_FILE_ONPREMISE_properties_typeProperties_userId": {
+			"type": "string",
+			"defaultValue": "treinamentosql"
+		},
+		"LS_FILE_ONPREMISE_PARAM_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "@{linkedService().host}"
+		},
+		"LS_FILE_ONPREMISE_PARAM_properties_typeProperties_userId": {
+			"type": "string",
+			"defaultValue": "treinamentosql"
+		},
+		"LS_KEY_VAULT_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://keyvaultgqtreinamentosql.vault.azure.net/"
+		},
+		"LS_SQLSERVER_ONPREMISE_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "constringsqlserveronpremise"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/PIP_00_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LOAD_FILE_ONPREMISE_TO_BLOB",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PIP_01_GET_METADATA",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"diretorio": {
+									"value": "@pipeline().parameters.diretorio",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "LOAD_FILE_BLOB_TO_ASQL",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "LOAD_FILE_ONPREMISE_TO_BLOB",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PIP_02_LOAD_FILE_BLOB_ASQL",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"diretorio": {
+						"type": "string",
+						"defaultValue": "Arquivos_Dados"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-05-25T12:10:12Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PIP_01_GET_METADATA')]",
+				"[concat(variables('factoryId'), '/pipelines/PIP_02_LOAD_FILE_BLOB_ASQL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PIP_01_GET_METADATA')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ListaArquivos",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "DS_FILE_PARAM_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"diretorio": {
+										"value": "@pipeline().parameters.diretorio",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "FileServerReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "LoopCargaArquivos",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "ListaArquivos",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('ListaArquivos').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 2,
+							"activities": [
+								{
+									"name": "CarregaArquivoBlob",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "FileServerReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_FILE_CSV",
+											"type": "DatasetReference",
+											"parameters": {
+												"arquivo": {
+													"value": "@item().name",
+													"type": "Expression"
+												},
+												"diretorio": {
+													"value": "@pipeline().parameters.diretorio",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_AZURE_BLOB",
+											"type": "DatasetReference",
+											"parameters": {
+												"arquivoblob": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"diretorio": {
+						"type": "string",
+						"defaultValue": "Arquivos_Dados"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-05-25T11:59:52Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_FILE_PARAM_CSV')]",
+				"[concat(variables('factoryId'), '/datasets/DS_FILE_CSV')]",
+				"[concat(variables('factoryId'), '/datasets/DS_AZURE_BLOB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PIP_02_LOAD_FILE_BLOB_ASQL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LOAD_FILE_TO_ASQL",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_AZURE_BLOB",
+								"type": "DatasetReference",
+								"parameters": {
+									"arquivoblob": "consulta_cand_2020_AC.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ASQL_CANDIDATOS",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-05-25T11:59:52Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_AZURE_BLOB')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ASQL_CANDIDATOS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PIP_03_LOAD_FILE_BLOB_ASQL_WEBMAIL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LOAD_FILE_TO_ASQL",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "TRUNCATE TABLE [dbo].[TB_CONSULTA_CANDIDATOS]",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_AZURE_BLOB",
+								"type": "DatasetReference",
+								"parameters": {
+									"arquivoblob": "consulta_cand_2020_AC.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ASQL_CANDIDATOS",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "NotificaConclusaoCarga",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "LOAD_FILE_TO_ASQL",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://prod-52.eastus2.logic.azure.com:443/workflows/f6aa3038a05846679484536e50d50ee0/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=2CCLGsaWolMsdDi_Ycol26j0-NidJ5SwxPasxS5NmW8",
+							"connectVia": {
+								"referenceName": "AutoResolveIntegrationRuntime",
+								"type": "IntegrationRuntimeReference"
+							},
+							"method": "POST",
+							"headers": {},
+							"body": {
+								"value": "{\n\"ListofFiles\":\"a\"\n}",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-05-25T16:51:47Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_AZURE_BLOB')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ASQL_CANDIDATOS')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PIP_CARREGAR_ARQUIVO_CANDIDATOS')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LOAD_FILE",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "DT_GERACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DT_GERACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "HH_GERACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "HH_GERACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "ANO_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ANO_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_TIPO_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_TIPO_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_TIPO_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_TIPO_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_TURNO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_TURNO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DT_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DT_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "TP_ABRANGENCIA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "TP_ABRANGENCIA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SG_UF",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SG_UF",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SG_UE",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SG_UE",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_UE",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_UE",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_CARGO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_CARGO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_CARGO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_CARGO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SQ_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SQ_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_URNA_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_URNA_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_SOCIAL_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_SOCIAL_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_CPF_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_CPF_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_EMAIL",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_EMAIL",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_SITUACAO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_SITUACAO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_SITUACAO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_SITUACAO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_DETALHE_SITUACAO_CAND",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_DETALHE_SITUACAO_CAND",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_DETALHE_SITUACAO_CAND",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_DETALHE_SITUACAO_CAND",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "TP_AGREMIACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "TP_AGREMIACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_PARTIDO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_PARTIDO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SG_PARTIDO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SG_PARTIDO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_PARTIDO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_PARTIDO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SQ_COLIGACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SQ_COLIGACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_COLIGACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_COLIGACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_COMPOSICAO_COLIGACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_COMPOSICAO_COLIGACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_NACIONALIDADE",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_NACIONALIDADE",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_NACIONALIDADE",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_NACIONALIDADE",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SG_UF_NASCIMENTO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SG_UF_NASCIMENTO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_MUNICIPIO_NASCIMENTO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_MUNICIPIO_NASCIMENTO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_MUNICIPIO_NASCIMENTO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_MUNICIPIO_NASCIMENTO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DT_NASCIMENTO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DT_NASCIMENTO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_IDADE_DATA_POSSE",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_IDADE_DATA_POSSE",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_TITULO_ELEITORAL_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_TITULO_ELEITORAL_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_GENERO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_GENERO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_GENERO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_GENERO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_GRAU_INSTRUCAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_GRAU_INSTRUCAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_GRAU_INSTRUCAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_GRAU_INSTRUCAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_ESTADO_CIVIL",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_ESTADO_CIVIL",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_ESTADO_CIVIL",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_ESTADO_CIVIL",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_COR_RACA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_COR_RACA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_COR_RACA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_COR_RACA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_OCUPACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_OCUPACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_OCUPACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_OCUPACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "VR_DESPESA_MAX_CAMPANHA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "VR_DESPESA_MAX_CAMPANHA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_SIT_TOT_TURNO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_SIT_TOT_TURNO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_SIT_TOT_TURNO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_SIT_TOT_TURNO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "ST_REELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ST_REELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "ST_DECLARAR_BENS",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ST_DECLARAR_BENS",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_PROTOCOLO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_PROTOCOLO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_PROCESSO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_PROCESSO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_SITUACAO_CANDIDATO_PLEITO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_SITUACAO_CANDIDATO_PLEITO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_SITUACAO_CANDIDATO_PLEITO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_SITUACAO_CANDIDATO_PLEITO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_SITUACAO_CANDIDATO_URNA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_SITUACAO_CANDIDATO_URNA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_SITUACAO_CANDIDATO_URNA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_SITUACAO_CANDIDATO_URNA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "ST_CANDIDATO_INSERIDO_URNA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ST_CANDIDATO_INSERIDO_URNA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_AZURE_BLOB",
+								"type": "DatasetReference",
+								"parameters": {
+									"arquivoblob": "consulta_cand_2020_AC.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ASQL_CANDIDATOS",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_AZURE_BLOB')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ASQL_CANDIDATOS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ASQL_CANDIDATOS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_AZURE_SQL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "BancoDados"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "DT_GERACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "HH_GERACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "ANO_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_TIPO_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_TIPO_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_TURNO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "DT_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "TP_ABRANGENCIA",
+						"type": "varchar"
+					},
+					{
+						"name": "SG_UF",
+						"type": "varchar"
+					},
+					{
+						"name": "SG_UE",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_UE",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_CARGO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_CARGO",
+						"type": "varchar"
+					},
+					{
+						"name": "SQ_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_URNA_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_SOCIAL_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_CPF_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_EMAIL",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_SITUACAO_CANDIDATURA",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_SITUACAO_CANDIDATURA",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_DETALHE_SITUACAO_CAND",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_DETALHE_SITUACAO_CAND",
+						"type": "varchar"
+					},
+					{
+						"name": "TP_AGREMIACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_PARTIDO",
+						"type": "varchar"
+					},
+					{
+						"name": "SG_PARTIDO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_PARTIDO",
+						"type": "varchar"
+					},
+					{
+						"name": "SQ_COLIGACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_COLIGACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_COMPOSICAO_COLIGACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_NACIONALIDADE",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_NACIONALIDADE",
+						"type": "varchar"
+					},
+					{
+						"name": "SG_UF_NASCIMENTO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_MUNICIPIO_NASCIMENTO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_MUNICIPIO_NASCIMENTO",
+						"type": "varchar"
+					},
+					{
+						"name": "DT_NASCIMENTO",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_IDADE_DATA_POSSE",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_TITULO_ELEITORAL_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_GENERO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_GENERO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_GRAU_INSTRUCAO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_GRAU_INSTRUCAO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_ESTADO_CIVIL",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_ESTADO_CIVIL",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_COR_RACA",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_COR_RACA",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_OCUPACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_OCUPACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "VR_DESPESA_MAX_CAMPANHA",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_SIT_TOT_TURNO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_SIT_TOT_TURNO",
+						"type": "varchar"
+					},
+					{
+						"name": "ST_REELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "ST_DECLARAR_BENS",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_PROTOCOLO_CANDIDATURA",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_PROCESSO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_SITUACAO_CANDIDATO_PLEITO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_SITUACAO_CANDIDATO_PLEITO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_SITUACAO_CANDIDATO_URNA",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_SITUACAO_CANDIDATO_URNA",
+						"type": "varchar"
+					},
+					{
+						"name": "ST_CANDIDATO_INSERIDO_URNA",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "TB_CONSULTA_CANDIDATOS"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AZURE_SQL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_AZURE_BLOB')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_BLOB",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"arquivoblob": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().arquivoblob",
+							"type": "Expression"
+						},
+						"folderPath": "csv",
+						"container": "files"
+					},
+					"columnDelimiter": ";",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_BLOB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_FILE_CSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_FILE_ONPREMISE",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"arquivo": {
+						"type": "String"
+					},
+					"diretorio": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Arquivos"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "FileServerLocation",
+						"fileName": {
+							"value": "@dataset().arquivo",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().diretorio",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ";",
+					"encodingName": "WINDOWS-1252",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "\"DT_GERACAO\";\"HH_GERACAO\";\"ANO_ELEICAO\";\"CD_TIPO_ELEICAO\";\"NM_TIPO_ELEICAO\";\"NR_TURNO\";\"CD_ELEICAO\";\"DS_ELEICAO\";\"DT_ELEICAO\";\"TP_ABRANGENCIA\";\"SG_UF\";\"SG_UE\";\"NM_UE\";\"CD_CARGO\";\"DS_CARGO\";\"SQ_CANDIDATO\";\"NR_CANDIDATO\";\"NM_CANDIDATO\";\"NM_URNA_CANDIDATO\";\"NM_SOCIAL_CANDIDATO\";\"NR_CPF_CANDIDATO\";\"NM_EMAIL\";\"CD_SITUACAO_CANDIDATURA\";\"DS_SITUACAO_CANDIDATURA\";\"CD_DETALHE_SITUACAO_CAND\";\"DS_DETALHE_SITUACAO_CAND\";\"TP_AGREMIACAO\";\"NR_PARTIDO\";\"SG_PARTIDO\";\"NM_PARTIDO\";\"SQ_COLIGACAO\";\"NM_COLIGACAO\";\"DS_COMPOSICAO_COLIGACAO\";\"CD_NACIONALIDADE\";\"DS_NACIONALIDADE\";\"SG_UF_NASCIMENTO\";\"CD_MUNICIPIO_NASCIMENTO\";\"NM_MUNICIPIO_NASCIMENTO\";\"DT_NASCIMENTO\";\"NR_IDADE_DATA_POSSE\";\"NR_TITULO_ELEITORAL_CANDIDATO\";\"CD_GENERO\";\"DS_GENERO\";\"CD_GRAU_INSTRUCAO\";\"DS_GRAU_INSTRUCAO\";\"CD_ESTADO_CIVIL\";\"DS_ESTADO_CIVIL\";\"CD_COR_RACA\";\"DS_COR_RACA\";\"CD_OCUPACAO\";\"DS_OCUPACAO\";\"VR_DESPESA_MAX_CAMPANHA\";\"CD_SIT_TOT_TURNO\";\"DS_SIT_TOT_TURNO\";\"ST_REELEICAO\";\"ST_DECLARAR_BENS\";\"NR_PROTOCOLO_CANDIDATURA\";\"NR_PROCESSO\";\"CD_SITUACAO_CANDIDATO_PLEITO\";\"DS_SITUACAO_CANDIDATO_PLEITO\";\"CD_SITUACAO_CANDIDATO_URNA\";\"DS_SITUACAO_CANDIDATO_URNA\";\"ST_CANDIDATO_INSERIDO_URNA\"",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_FILE_ONPREMISE')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_FILE_PARAM_CSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_FILE_ONPREMISE",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"diretorio": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Arquivos"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "FileServerLocation",
+						"folderPath": {
+							"value": "@dataset().diretorio",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ";",
+					"encodingName": "WINDOWS-1252",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_FILE_ONPREMISE')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_SQL_ONPREMISE')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_SQLSERVER_ONPREMISE",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "BancoDados"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_SQLSERVER_ONPREMISE')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_AZURE_SQL')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_AZURE_SQL_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_BLOB')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_BLOB_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_FILE_ONPREMISE')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "FileServer",
+				"typeProperties": {
+					"host": "[parameters('LS_FILE_ONPREMISE_properties_typeProperties_host')]",
+					"userId": "[parameters('LS_FILE_ONPREMISE_properties_typeProperties_userId')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_FILE_ONPREMISE_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "IRgqtreinamentosql",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/IRgqtreinamentosql')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_FILE_ONPREMISE_PARAM')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"host": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "FileServer",
+				"typeProperties": {
+					"host": "[parameters('LS_FILE_ONPREMISE_PARAM_properties_typeProperties_host')]",
+					"userId": "[parameters('LS_FILE_ONPREMISE_PARAM_properties_typeProperties_userId')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_FILE_ONPREMISE_PARAM_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "IRgqtreinamentosql",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/IRgqtreinamentosql')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_KEY_VAULT')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('LS_KEY_VAULT_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQLSERVER_ONPREMISE')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KEY_VAULT",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "[parameters('LS_SQLSERVER_ONPREMISE_properties_typeProperties_connectionString_secretName')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "IRgqtreinamentosql",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/IRgqtreinamentosql')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KEY_VAULT')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQLSERVER_ONPREMISE_PARAM')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"server": {
+						"type": "String"
+					},
+					"database": {
+						"type": "String"
+					},
+					"user": {
+						"type": "String"
+					},
+					"password": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_SQLSERVER_ONPREMISE_PARAM_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "IRgqtreinamentosql",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/IRgqtreinamentosql')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TRG_EXEC_PIPELINE')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 2,
+						"startTime": "2022-05-18T17:25:00",
+						"endTime": "2022-05-21T17:35:00",
+						"timeZone": "E. South America Standard Time"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				},
+				"managedVirtualNetwork": {
+					"type": "ManagedVirtualNetworkReference",
+					"referenceName": "default"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/IRgqtreinamentosql')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
+			"apiVersion": "2018-06-01",
+			"properties": {},
+			"dependsOn": []
+		}
+	]
+}

@@ -1,0 +1,48 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-treinamentosql"
+		},
+		"LS_AZURE_SQL_connectionString": {
+			"value": ""
+		},
+		"LS_BLOB_connectionString": {
+			"value": ""
+		},
+		"LS_FILE_ONPREMISE_password": {
+			"value": ""
+		},
+		"LS_FILE_ONPREMISE_PARAM_password": {
+			"value": ""
+		},
+		"LS_SQLSERVER_ONPREMISE_PARAM_connectionString": {
+			"value": ""
+		},
+		"LS_FILE_ONPREMISE_properties_typeProperties_host": {
+			"value": "\\\\DESKTOP-NAFOKAU\\Curso_ADF"
+		},
+		"LS_FILE_ONPREMISE_properties_typeProperties_userId": {
+			"value": "treinamentosql"
+		},
+		"LS_FILE_ONPREMISE_PARAM_properties_typeProperties_host": {
+			"value": "@{linkedService().host}"
+		},
+		"LS_FILE_ONPREMISE_PARAM_properties_typeProperties_userId": {
+			"value": "treinamentosql"
+		},
+		"LS_KEY_VAULT_properties_typeProperties_baseUrl": {
+			"value": "https://keyvaultgqtreinamentosql.vault.azure.net/"
+		},
+		"LS_SQLSERVER_ONPREMISE_properties_typeProperties_connectionString_secretName": {
+			"value": "constringsqlserveronpremise"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
