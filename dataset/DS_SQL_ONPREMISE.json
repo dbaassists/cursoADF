@@ -1,0 +1,16 @@
+{
+	"name": "DS_SQL_ONPREMISE",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SQLSERVER_ONPREMISE",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "BancoDados"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

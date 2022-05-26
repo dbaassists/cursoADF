@@ -1,0 +1,149 @@
+{
+	"name": "PIP_01_GET_METADATA",
+	"properties": {
+		"activities": [
+			{
+				"name": "ListaArquivos",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_FILE_PARAM_CSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"diretorio": {
+								"value": "@pipeline().parameters.diretorio",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "FileServerReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "LoopCargaArquivos",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "ListaArquivos",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('ListaArquivos').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 2,
+					"activities": [
+						{
+							"name": "CarregaArquivoBlob",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "FileServerReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_FILE_CSV",
+									"type": "DatasetReference",
+									"parameters": {
+										"arquivo": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"diretorio": {
+											"value": "@pipeline().parameters.diretorio",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_AZURE_BLOB",
+									"type": "DatasetReference",
+									"parameters": {
+										"arquivoblob": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"diretorio": {
+				"type": "string",
+				"defaultValue": "Arquivos_Dados"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-05-25T11:59:52Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,29 @@
+{
+	"name": "LS_SQLSERVER_ONPREMISE_PARAM",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"server": {
+				"type": "String"
+			},
+			"database": {
+				"type": "String"
+			},
+			"user": {
+				"type": "String"
+			},
+			"password": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Data Source=@{linkedService().server};Initial Catalog=@{linkedService().database};User ID=@{linkedService().user};Password=@{linkedService().password}"
+		},
+		"connectVia": {
+			"referenceName": "IRgqtreinamentosql",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"name": "LS_KEY_VAULT",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://keyvaultgqtreinamentosql.vault.azure.net/"
+		}
+	}
+}

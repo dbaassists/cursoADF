@@ -1,0 +1,17 @@
+{
+	"name": "LS_FILE_ONPREMISE",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "FileServer",
+		"typeProperties": {
+			"host": "\\\\DESKTOP-NAFOKAU\\Curso_ADF",
+			"userId": "treinamentosql",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJlNTBkZWE0NS01NjliLTRjMDQtYjgxNC03Zjk0MDgzZGM3ZjgiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "IRgqtreinamentosql",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

@@ -1,0 +1,99 @@
+{
+	"name": "PIP_03_LOAD_FILE_BLOB_ASQL_WEBMAIL",
+	"properties": {
+		"activities": [
+			{
+				"name": "LOAD_FILE_TO_ASQL",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "TRUNCATE TABLE [dbo].[TB_CONSULTA_CANDIDATOS]",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_AZURE_BLOB",
+						"type": "DatasetReference",
+						"parameters": {
+							"arquivoblob": "consulta_cand_2020_AC.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ASQL_CANDIDATOS",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "NotificaConclusaoCarga",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "LOAD_FILE_TO_ASQL",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://prod-52.eastus2.logic.azure.com:443/workflows/f6aa3038a05846679484536e50d50ee0/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=2CCLGsaWolMsdDi_Ycol26j0-NidJ5SwxPasxS5NmW8",
+					"connectVia": {
+						"referenceName": "AutoResolveIntegrationRuntime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"method": "POST",
+					"body": {
+						"value": "{\n\"ListofFiles\":\"a\"\n}",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-05-25T16:51:47Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

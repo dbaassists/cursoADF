@@ -1,0 +1,18 @@
+{
+	"name": "TRG_EXEC_PIPELINE",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 2,
+				"startTime": "2022-05-18T17:25:00",
+				"endTime": "2022-05-21T17:35:00",
+				"timeZone": "E. South America Standard Time"
+			}
+		}
+	}
+}

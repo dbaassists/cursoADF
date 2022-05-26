@@ -1,0 +1,22 @@
+{
+	"name": "LS_SQLSERVER_ONPREMISE",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"connectionString": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KEY_VAULT",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "constringsqlserveronpremise"
+			}
+		},
+		"connectVia": {
+			"referenceName": "IRgqtreinamentosql",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

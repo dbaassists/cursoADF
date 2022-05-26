@@ -1,0 +1,55 @@
+{
+	"name": "PIP_00_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "LOAD_FILE_ONPREMISE_TO_BLOB",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PIP_01_GET_METADATA",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"diretorio": {
+							"value": "@pipeline().parameters.diretorio",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "LOAD_FILE_BLOB_TO_ASQL",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "LOAD_FILE_ONPREMISE_TO_BLOB",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PIP_02_LOAD_FILE_BLOB_ASQL",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"parameters": {
+			"diretorio": {
+				"type": "string",
+				"defaultValue": "Arquivos_Dados"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-05-25T12:10:12Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

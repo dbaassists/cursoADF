@@ -1,0 +1,34 @@
+{
+	"name": "DS_FILE_PARAM_CSV",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_FILE_ONPREMISE",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"diretorio": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Arquivos"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "FileServerLocation",
+				"folderPath": {
+					"value": "@dataset().diretorio",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ";",
+			"encodingName": "WINDOWS-1252",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

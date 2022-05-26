@@ -1,0 +1,22 @@
+{
+	"name": "LS_FILE_ONPREMISE_PARAM",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"host": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "FileServer",
+		"typeProperties": {
+			"host": "@{linkedService().host}",
+			"userId": "treinamentosql",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiI4Mjk3ZWQ1My1iODU0LTQ5ODMtYjg4Ny03MzNhZTE0MzkwZmYiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "IRgqtreinamentosql",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
