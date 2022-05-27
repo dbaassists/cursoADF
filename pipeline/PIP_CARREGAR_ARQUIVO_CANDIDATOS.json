@@ -18,7 +18,7 @@
 					"source": {
 						"type": "DelimitedTextSource",
 						"storeSettings": {
-							"type": "AzureBlobStorageReadSettings",
+							"type": "FileServerReadSettings",
 							"recursive": true,
 							"enablePartitionDiscovery": false
 						},
@@ -27,9 +27,15 @@
 						}
 					},
 					"sink": {
-						"type": "AzureSqlSink",
-						"writeBehavior": "insert",
-						"sqlWriterUseTableLock": false
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
 					},
 					"enableStaging": false,
 					"translator": {
@@ -801,17 +807,20 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "DS_AZURE_BLOB",
+						"referenceName": "DS_FILE_PARAM_CSV",
 						"type": "DatasetReference",
 						"parameters": {
-							"arquivoblob": "consulta_cand_2020_AC.csv"
+							"diretorio": "Arquivos_Dados\\Mesario"
 						}
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "DS_ASQL_CANDIDATOS",
-						"type": "DatasetReference"
+						"referenceName": "DS_AZURE_BLOB",
+						"type": "DatasetReference",
+						"parameters": {
+							"arquivoblob": "convocacao_mesarios_2020_RJ.csv"
+						}
 					}
 				]
 			}
