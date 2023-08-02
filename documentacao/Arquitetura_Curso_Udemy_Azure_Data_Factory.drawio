@@ -1,6 +1,6 @@
-<mxfile modified="2023-08-02T05:28:08.579Z" host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36" etag="9SdMU8Iyg4Wb6GHKe27n" version="21.6.5" type="github">
+<mxfile modified="2023-08-02T05:33:53.217Z" host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36" etag="bNpBPMGo3VJgQPZsrQ9F" version="21.6.5" type="github">
   <diagram id="WI9T0HZ2pTsCkuznbFz-" name="Page-1">
-    <mxGraphModel dx="2562" dy="577" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="2564" dy="684" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -382,8 +382,8 @@
         <mxCell id="xLpzl_3wgGb5025-HunL-22" value="Subscription -&amp;nbsp;adf_treinamento_udemy" style="text;html=1;align=left;verticalAlign=top;spacingTop=-4;fontSize=14;labelBackgroundColor=none;whiteSpace=wrap;" parent="1" vertex="1">
           <mxGeometry x="-120.5" y="327" width="277.5" height="20" as="geometry" />
         </mxCell>
-        <mxCell id="xLpzl_3wgGb5025-HunL-23" value="Resource Group" style="text;html=1;align=left;verticalAlign=top;spacingTop=-4;fontSize=14;labelBackgroundColor=none;whiteSpace=wrap;" parent="1" vertex="1">
-          <mxGeometry x="-120.5" y="413" width="130.5" height="20" as="geometry" />
+        <mxCell id="xLpzl_3wgGb5025-HunL-23" value="Resource Group -&amp;nbsp;rg_treinamento_udemy" style="text;html=1;align=left;verticalAlign=top;spacingTop=-4;fontSize=14;labelBackgroundColor=none;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="-120.5" y="413" width="281.5" height="20" as="geometry" />
         </mxCell>
         <mxCell id="xLpzl_3wgGb5025-HunL-24" value="Storage Account" style="text;html=1;align=left;verticalAlign=top;spacingTop=-4;fontSize=14;labelBackgroundColor=none;whiteSpace=wrap;" parent="1" vertex="1">
           <mxGeometry x="-119.5" y="504" width="139.5" height="20" as="geometry" />
