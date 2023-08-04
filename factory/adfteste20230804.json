@@ -1,0 +1,9 @@
+{
+	"name": "adfteste20230804",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "4b3ad9f4-631e-446d-b49c-a93e35150ba9",
+		"tenantId": "ed7b0d2d-25ec-4ac4-9a6f-cbb2ea2e238c"
+	}
+}
