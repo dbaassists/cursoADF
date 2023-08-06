@@ -1,9 +1,0 @@
-{
-	"name": "adf-adf-treinamento-udemy",
-	"location": "eastus",
-	"identity": {
-		"type": "SystemAssigned",
-		"principalId": "1ba2102b-7b42-4708-97b1-9fb4627830a3",
-		"tenantId": "ed7b0d2d-25ec-4ac4-9a6f-cbb2ea2e238c"
-	}
-}
