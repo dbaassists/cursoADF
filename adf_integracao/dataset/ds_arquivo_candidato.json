@@ -1,0 +1,325 @@
+{
+	"name": "ds_arquivo_candidato",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_arquivo_candidao",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "FileServerLocation",
+				"fileName": "consulta_cand_2022_BRASIL.csv",
+				"folderPath": "arquivos"
+			},
+			"columnDelimiter": ";",
+			"encodingName": "WINDOWS-1252",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "DT_GERACAO",
+				"type": "String"
+			},
+			{
+				"name": "HH_GERACAO",
+				"type": "String"
+			},
+			{
+				"name": "ANO_ELEICAO",
+				"type": "String"
+			},
+			{
+				"name": "CD_TIPO_ELEICAO",
+				"type": "String"
+			},
+			{
+				"name": "NM_TIPO_ELEICAO",
+				"type": "String"
+			},
+			{
+				"name": "NR_TURNO",
+				"type": "String"
+			},
+			{
+				"name": "CD_ELEICAO",
+				"type": "String"
+			},
+			{
+				"name": "DS_ELEICAO",
+				"type": "String"
+			},
+			{
+				"name": "DT_ELEICAO",
+				"type": "String"
+			},
+			{
+				"name": "TP_ABRANGENCIA",
+				"type": "String"
+			},
+			{
+				"name": "SG_UF",
+				"type": "String"
+			},
+			{
+				"name": "SG_UE",
+				"type": "String"
+			},
+			{
+				"name": "NM_UE",
+				"type": "String"
+			},
+			{
+				"name": "CD_CARGO",
+				"type": "String"
+			},
+			{
+				"name": "DS_CARGO",
+				"type": "String"
+			},
+			{
+				"name": "SQ_CANDIDATO",
+				"type": "String"
+			},
+			{
+				"name": "NR_CANDIDATO",
+				"type": "String"
+			},
+			{
+				"name": "NM_CANDIDATO",
+				"type": "String"
+			},
+			{
+				"name": "NM_URNA_CANDIDATO",
+				"type": "String"
+			},
+			{
+				"name": "NM_SOCIAL_CANDIDATO",
+				"type": "String"
+			},
+			{
+				"name": "NR_CPF_CANDIDATO",
+				"type": "String"
+			},
+			{
+				"name": "NM_EMAIL",
+				"type": "String"
+			},
+			{
+				"name": "CD_SITUACAO_CANDIDATURA",
+				"type": "String"
+			},
+			{
+				"name": "DS_SITUACAO_CANDIDATURA",
+				"type": "String"
+			},
+			{
+				"name": "CD_DETALHE_SITUACAO_CAND",
+				"type": "String"
+			},
+			{
+				"name": "DS_DETALHE_SITUACAO_CAND",
+				"type": "String"
+			},
+			{
+				"name": "TP_AGREMIACAO",
+				"type": "String"
+			},
+			{
+				"name": "NR_PARTIDO",
+				"type": "String"
+			},
+			{
+				"name": "SG_PARTIDO",
+				"type": "String"
+			},
+			{
+				"name": "NM_PARTIDO",
+				"type": "String"
+			},
+			{
+				"name": "NR_FEDERACAO",
+				"type": "String"
+			},
+			{
+				"name": "NM_FEDERACAO",
+				"type": "String"
+			},
+			{
+				"name": "SG_FEDERACAO",
+				"type": "String"
+			},
+			{
+				"name": "DS_COMPOSICAO_FEDERACAO",
+				"type": "String"
+			},
+			{
+				"name": "SQ_COLIGACAO",
+				"type": "String"
+			},
+			{
+				"name": "NM_COLIGACAO",
+				"type": "String"
+			},
+			{
+				"name": "DS_COMPOSICAO_COLIGACAO",
+				"type": "String"
+			},
+			{
+				"name": "CD_NACIONALIDADE",
+				"type": "String"
+			},
+			{
+				"name": "DS_NACIONALIDADE",
+				"type": "String"
+			},
+			{
+				"name": "SG_UF_NASCIMENTO",
+				"type": "String"
+			},
+			{
+				"name": "CD_MUNICIPIO_NASCIMENTO",
+				"type": "String"
+			},
+			{
+				"name": "NM_MUNICIPIO_NASCIMENTO",
+				"type": "String"
+			},
+			{
+				"name": "DT_NASCIMENTO",
+				"type": "String"
+			},
+			{
+				"name": "NR_IDADE_DATA_POSSE",
+				"type": "String"
+			},
+			{
+				"name": "NR_TITULO_ELEITORAL_CANDIDATO",
+				"type": "String"
+			},
+			{
+				"name": "CD_GENERO",
+				"type": "String"
+			},
+			{
+				"name": "DS_GENERO",
+				"type": "String"
+			},
+			{
+				"name": "CD_GRAU_INSTRUCAO",
+				"type": "String"
+			},
+			{
+				"name": "DS_GRAU_INSTRUCAO",
+				"type": "String"
+			},
+			{
+				"name": "CD_ESTADO_CIVIL",
+				"type": "String"
+			},
+			{
+				"name": "DS_ESTADO_CIVIL",
+				"type": "String"
+			},
+			{
+				"name": "CD_COR_RACA",
+				"type": "String"
+			},
+			{
+				"name": "DS_COR_RACA",
+				"type": "String"
+			},
+			{
+				"name": "CD_OCUPACAO",
+				"type": "String"
+			},
+			{
+				"name": "DS_OCUPACAO",
+				"type": "String"
+			},
+			{
+				"name": "VR_DESPESA_MAX_CAMPANHA",
+				"type": "String"
+			},
+			{
+				"name": "CD_SIT_TOT_TURNO",
+				"type": "String"
+			},
+			{
+				"name": "DS_SIT_TOT_TURNO",
+				"type": "String"
+			},
+			{
+				"name": "ST_REELEICAO",
+				"type": "String"
+			},
+			{
+				"name": "ST_DECLARAR_BENS",
+				"type": "String"
+			},
+			{
+				"name": "NR_PROTOCOLO_CANDIDATURA",
+				"type": "String"
+			},
+			{
+				"name": "NR_PROCESSO",
+				"type": "String"
+			},
+			{
+				"name": "CD_SITUACAO_CANDIDATO_PLEITO",
+				"type": "String"
+			},
+			{
+				"name": "DS_SITUACAO_CANDIDATO_PLEITO",
+				"type": "String"
+			},
+			{
+				"name": "CD_SITUACAO_CANDIDATO_URNA",
+				"type": "String"
+			},
+			{
+				"name": "DS_SITUACAO_CANDIDATO_URNA",
+				"type": "String"
+			},
+			{
+				"name": "ST_CANDIDATO_INSERIDO_URNA",
+				"type": "String"
+			},
+			{
+				"name": "NM_TIPO_DESTINACAO_VOTOS",
+				"type": "String"
+			},
+			{
+				"name": "CD_SITUACAO_CANDIDATO_TOT",
+				"type": "String"
+			},
+			{
+				"name": "DS_SITUACAO_CANDIDATO_TOT",
+				"type": "String"
+			},
+			{
+				"name": "ST_PREST_CONTAS",
+				"type": "String"
+			},
+			{
+				"name": "ST_SUBSTITUIDO",
+				"type": "String"
+			},
+			{
+				"name": "SQ_SUBSTITUIDO",
+				"type": "String"
+			},
+			{
+				"name": "SQ_ORDEM_SUPLENCIA",
+				"type": "String"
+			},
+			{
+				"name": "DT_ACEITE_CANDIDATURA",
+				"type": "String"
+			}
+		]
+	}
+}
