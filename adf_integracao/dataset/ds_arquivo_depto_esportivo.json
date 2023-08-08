@@ -1,0 +1,30 @@
+{
+	"name": "ds_arquivo_depto_esportivo",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_datalake_depto_esportivo",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "catar2022_base_jogadores.csv",
+				"folderPath": "depto_esportivo",
+				"fileSystem": "adftreinamentoudemy"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "NOMJOGADOR;NUMCAMISA;NOMPOSICAO;NOMSELECAO",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

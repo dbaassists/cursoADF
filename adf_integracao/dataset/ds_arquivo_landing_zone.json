@@ -1,0 +1,25 @@
+{
+	"name": "ds_arquivo_landing_zone",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_datalake_landing_zone",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "jogadores.csv",
+				"folderPath": "analytics/landing_zone",
+				"fileSystem": "adftreinamentoudemy"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
