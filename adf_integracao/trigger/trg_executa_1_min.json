@@ -1,0 +1,25 @@
+{
+	"name": "trg_executa_1_min",
+	"properties": {
+		"description": "Está trigger será executada a cada minuto",
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pip_treinamento_01",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 1,
+				"startTime": "2023-08-10T04:20:00",
+				"timeZone": "E. South America Standard Time"
+			}
+		}
+	}
+}
