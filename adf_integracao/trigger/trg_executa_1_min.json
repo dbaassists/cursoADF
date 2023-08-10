@@ -1,9 +1,17 @@
 {
 	"name": "trg_executa_1_min",
 	"properties": {
+		"description": "Essa trigger será executada a cada minuto.",
 		"annotations": [],
 		"runtimeState": "Started",
-		"pipelines": [],
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pip_treinamento_02",
+					"type": "PipelineReference"
+				}
+			}
+		],
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
