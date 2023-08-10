@@ -171,8 +171,7 @@
 					"recurrence": {
 						"frequency": "Minute",
 						"interval": 5,
-						"startTime": "2023-08-09T01:45:00",
-						"endTime": "2023-08-09T01:59:00",
+						"startTime": "2023-08-10T01:55:00",
 						"timeZone": "E. South America Standard Time"
 					}
 				}
