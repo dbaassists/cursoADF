@@ -1,0 +1,18 @@
+{
+	"name": "trb_tumbling_window",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 5,
+				"startTime": "2023-08-09T01:40:00",
+				"endTime": "2023-08-09T01:59:00",
+				"timeZone": "E. South America Standard Time"
+			}
+		}
+	}
+}
