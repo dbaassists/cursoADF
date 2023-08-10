@@ -1,0 +1,98 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-adf-treinamento-udemy"
+		},
+		"ls_arquivo_candidao_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_arquivo_candidao'"
+		},
+		"ls_datalake_depto_esportivo_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_datalake_depto_esportivo'"
+		},
+		"ls_datalake_landing_zone_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_datalake_landing_zone'"
+		},
+		"ls_sql_server_onpremise_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_sql_server_onpremise'"
+		},
+		"ls_arquivo_candidao_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "c:\\\\cursoADF"
+		},
+		"ls_arquivo_candidao_properties_typeProperties_userId": {
+			"type": "string",
+			"defaultValue": "DESKTOP-GT679GD\\adf"
+		},
+		"ls_datalake_depto_esportivo_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://asaadftreinamentoudemy.dfs.core.windows.net/"
+		},
+		"ls_datalake_landing_zone_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://asaadftreinamentoudemy.dfs.core.windows.net/"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "adf-adf-treinamento-udemy_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"ls_arquivo_candidao_password": {
+						"value": "[parameters('ls_arquivo_candidao_password')]"
+					},
+					"ls_sql_server_onpremise_connectionString": {
+						"value": "[parameters('ls_sql_server_onpremise_connectionString')]"
+					},
+					"ls_datalake_depto_esportivo_accountKey": {
+						"value": "[parameters('ls_datalake_depto_esportivo_accountKey')]"
+					},
+					"ls_datalake_landing_zone_accountKey": {
+						"value": "[parameters('ls_datalake_landing_zone_accountKey')]"
+					},
+					"ls_arquivo_candidao_properties_typeProperties_host": {
+						"value": "[parameters('ls_arquivo_candidao_properties_typeProperties_host')]"
+					},
+					"ls_arquivo_candidao_properties_typeProperties_userId": {
+						"value": "[parameters('ls_arquivo_candidao_properties_typeProperties_userId')]"
+					},
+					"ls_datalake_depto_esportivo_properties_typeProperties_url": {
+						"value": "[parameters('ls_datalake_depto_esportivo_properties_typeProperties_url')]"
+					},
+					"ls_datalake_landing_zone_properties_typeProperties_url": {
+						"value": "[parameters('ls_datalake_landing_zone_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

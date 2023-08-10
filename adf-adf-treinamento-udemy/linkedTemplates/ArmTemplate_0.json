@@ -1,0 +1,2024 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-adf-treinamento-udemy"
+		},
+		"ls_arquivo_candidao_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_arquivo_candidao'"
+		},
+		"ls_sql_server_onpremise_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_sql_server_onpremise'"
+		},
+		"ls_datalake_depto_esportivo_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_datalake_depto_esportivo'"
+		},
+		"ls_datalake_landing_zone_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_datalake_landing_zone'"
+		},
+		"ls_arquivo_candidao_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "c:\\\\cursoADF"
+		},
+		"ls_arquivo_candidao_properties_typeProperties_userId": {
+			"type": "string",
+			"defaultValue": "DESKTOP-GT679GD\\adf"
+		},
+		"ls_datalake_depto_esportivo_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://asaadftreinamentoudemy.dfs.core.windows.net/"
+		},
+		"ls_datalake_landing_zone_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://asaadftreinamentoudemy.dfs.core.windows.net/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/pip_treinamento_01')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 1
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trg_executa_1_min')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Está trigger será executada a cada minuto",
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 1,
+						"startTime": "2023-08-09T01:25:00",
+						"timeZone": "E. South America Standard Time"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ir-selfhosted')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
+			"apiVersion": "2018-06-01",
+			"properties": {},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_arquivo_candidao')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "aaaa",
+				"annotations": [],
+				"type": "FileServer",
+				"typeProperties": {
+					"host": "[parameters('ls_arquivo_candidao_properties_typeProperties_host')]",
+					"userId": "[parameters('ls_arquivo_candidao_properties_typeProperties_userId')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_arquivo_candidao_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "ir-selfhosted",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-selfhosted')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_sql_server_onpremise')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_sql_server_onpremise_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "ir-selfhosted",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-selfhosted')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trb_tumbling_window')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pip_treinamento_01",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 5,
+						"startTime": "2023-08-09T01:45:00",
+						"endTime": "2023-08-09T01:59:00",
+						"timeZone": "E. South America Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pip_treinamento_01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				},
+				"managedVirtualNetwork": {
+					"type": "ManagedVirtualNetworkReference",
+					"referenceName": "default"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_arquivo_candidato')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_arquivo_candidao",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "FileServerLocation",
+						"fileName": "consulta_cand_2022_BRASIL.csv",
+						"folderPath": "arquivos"
+					},
+					"columnDelimiter": ";",
+					"encodingName": "WINDOWS-1252",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "DT_GERACAO",
+						"type": "String"
+					},
+					{
+						"name": "HH_GERACAO",
+						"type": "String"
+					},
+					{
+						"name": "ANO_ELEICAO",
+						"type": "String"
+					},
+					{
+						"name": "CD_TIPO_ELEICAO",
+						"type": "String"
+					},
+					{
+						"name": "NM_TIPO_ELEICAO",
+						"type": "String"
+					},
+					{
+						"name": "NR_TURNO",
+						"type": "String"
+					},
+					{
+						"name": "CD_ELEICAO",
+						"type": "String"
+					},
+					{
+						"name": "DS_ELEICAO",
+						"type": "String"
+					},
+					{
+						"name": "DT_ELEICAO",
+						"type": "String"
+					},
+					{
+						"name": "TP_ABRANGENCIA",
+						"type": "String"
+					},
+					{
+						"name": "SG_UF",
+						"type": "String"
+					},
+					{
+						"name": "SG_UE",
+						"type": "String"
+					},
+					{
+						"name": "NM_UE",
+						"type": "String"
+					},
+					{
+						"name": "CD_CARGO",
+						"type": "String"
+					},
+					{
+						"name": "DS_CARGO",
+						"type": "String"
+					},
+					{
+						"name": "SQ_CANDIDATO",
+						"type": "String"
+					},
+					{
+						"name": "NR_CANDIDATO",
+						"type": "String"
+					},
+					{
+						"name": "NM_CANDIDATO",
+						"type": "String"
+					},
+					{
+						"name": "NM_URNA_CANDIDATO",
+						"type": "String"
+					},
+					{
+						"name": "NM_SOCIAL_CANDIDATO",
+						"type": "String"
+					},
+					{
+						"name": "NR_CPF_CANDIDATO",
+						"type": "String"
+					},
+					{
+						"name": "NM_EMAIL",
+						"type": "String"
+					},
+					{
+						"name": "CD_SITUACAO_CANDIDATURA",
+						"type": "String"
+					},
+					{
+						"name": "DS_SITUACAO_CANDIDATURA",
+						"type": "String"
+					},
+					{
+						"name": "CD_DETALHE_SITUACAO_CAND",
+						"type": "String"
+					},
+					{
+						"name": "DS_DETALHE_SITUACAO_CAND",
+						"type": "String"
+					},
+					{
+						"name": "TP_AGREMIACAO",
+						"type": "String"
+					},
+					{
+						"name": "NR_PARTIDO",
+						"type": "String"
+					},
+					{
+						"name": "SG_PARTIDO",
+						"type": "String"
+					},
+					{
+						"name": "NM_PARTIDO",
+						"type": "String"
+					},
+					{
+						"name": "NR_FEDERACAO",
+						"type": "String"
+					},
+					{
+						"name": "NM_FEDERACAO",
+						"type": "String"
+					},
+					{
+						"name": "SG_FEDERACAO",
+						"type": "String"
+					},
+					{
+						"name": "DS_COMPOSICAO_FEDERACAO",
+						"type": "String"
+					},
+					{
+						"name": "SQ_COLIGACAO",
+						"type": "String"
+					},
+					{
+						"name": "NM_COLIGACAO",
+						"type": "String"
+					},
+					{
+						"name": "DS_COMPOSICAO_COLIGACAO",
+						"type": "String"
+					},
+					{
+						"name": "CD_NACIONALIDADE",
+						"type": "String"
+					},
+					{
+						"name": "DS_NACIONALIDADE",
+						"type": "String"
+					},
+					{
+						"name": "SG_UF_NASCIMENTO",
+						"type": "String"
+					},
+					{
+						"name": "CD_MUNICIPIO_NASCIMENTO",
+						"type": "String"
+					},
+					{
+						"name": "NM_MUNICIPIO_NASCIMENTO",
+						"type": "String"
+					},
+					{
+						"name": "DT_NASCIMENTO",
+						"type": "String"
+					},
+					{
+						"name": "NR_IDADE_DATA_POSSE",
+						"type": "String"
+					},
+					{
+						"name": "NR_TITULO_ELEITORAL_CANDIDATO",
+						"type": "String"
+					},
+					{
+						"name": "CD_GENERO",
+						"type": "String"
+					},
+					{
+						"name": "DS_GENERO",
+						"type": "String"
+					},
+					{
+						"name": "CD_GRAU_INSTRUCAO",
+						"type": "String"
+					},
+					{
+						"name": "DS_GRAU_INSTRUCAO",
+						"type": "String"
+					},
+					{
+						"name": "CD_ESTADO_CIVIL",
+						"type": "String"
+					},
+					{
+						"name": "DS_ESTADO_CIVIL",
+						"type": "String"
+					},
+					{
+						"name": "CD_COR_RACA",
+						"type": "String"
+					},
+					{
+						"name": "DS_COR_RACA",
+						"type": "String"
+					},
+					{
+						"name": "CD_OCUPACAO",
+						"type": "String"
+					},
+					{
+						"name": "DS_OCUPACAO",
+						"type": "String"
+					},
+					{
+						"name": "VR_DESPESA_MAX_CAMPANHA",
+						"type": "String"
+					},
+					{
+						"name": "CD_SIT_TOT_TURNO",
+						"type": "String"
+					},
+					{
+						"name": "DS_SIT_TOT_TURNO",
+						"type": "String"
+					},
+					{
+						"name": "ST_REELEICAO",
+						"type": "String"
+					},
+					{
+						"name": "ST_DECLARAR_BENS",
+						"type": "String"
+					},
+					{
+						"name": "NR_PROTOCOLO_CANDIDATURA",
+						"type": "String"
+					},
+					{
+						"name": "NR_PROCESSO",
+						"type": "String"
+					},
+					{
+						"name": "CD_SITUACAO_CANDIDATO_PLEITO",
+						"type": "String"
+					},
+					{
+						"name": "DS_SITUACAO_CANDIDATO_PLEITO",
+						"type": "String"
+					},
+					{
+						"name": "CD_SITUACAO_CANDIDATO_URNA",
+						"type": "String"
+					},
+					{
+						"name": "DS_SITUACAO_CANDIDATO_URNA",
+						"type": "String"
+					},
+					{
+						"name": "ST_CANDIDATO_INSERIDO_URNA",
+						"type": "String"
+					},
+					{
+						"name": "NM_TIPO_DESTINACAO_VOTOS",
+						"type": "String"
+					},
+					{
+						"name": "CD_SITUACAO_CANDIDATO_TOT",
+						"type": "String"
+					},
+					{
+						"name": "DS_SITUACAO_CANDIDATO_TOT",
+						"type": "String"
+					},
+					{
+						"name": "ST_PREST_CONTAS",
+						"type": "String"
+					},
+					{
+						"name": "ST_SUBSTITUIDO",
+						"type": "String"
+					},
+					{
+						"name": "SQ_SUBSTITUIDO",
+						"type": "String"
+					},
+					{
+						"name": "SQ_ORDEM_SUPLENCIA",
+						"type": "String"
+					},
+					{
+						"name": "DT_ACEITE_CANDIDATURA",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_arquivo_candidao')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_sql_server_tb_candidato')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_server_onpremise",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "DT_GERACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "HH_GERACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "ANO_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_TIPO_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_TIPO_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_TURNO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "DT_ELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "TP_ABRANGENCIA",
+						"type": "varchar"
+					},
+					{
+						"name": "SG_UF",
+						"type": "varchar"
+					},
+					{
+						"name": "SG_UE",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_UE",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_CARGO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_CARGO",
+						"type": "varchar"
+					},
+					{
+						"name": "SQ_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_URNA_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_SOCIAL_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_CPF_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_EMAIL",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_SITUACAO_CANDIDATURA",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_SITUACAO_CANDIDATURA",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_DETALHE_SITUACAO_CAND",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_DETALHE_SITUACAO_CAND",
+						"type": "varchar"
+					},
+					{
+						"name": "TP_AGREMIACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_PARTIDO",
+						"type": "varchar"
+					},
+					{
+						"name": "SG_PARTIDO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_PARTIDO",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_FEDERACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_FEDERACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "SG_FEDERACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_COMPOSICAO_FEDERACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "SQ_COLIGACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_COLIGACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_COMPOSICAO_COLIGACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_NACIONALIDADE",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_NACIONALIDADE",
+						"type": "varchar"
+					},
+					{
+						"name": "SG_UF_NASCIMENTO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_MUNICIPIO_NASCIMENTO",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_MUNICIPIO_NASCIMENTO",
+						"type": "varchar"
+					},
+					{
+						"name": "DT_NASCIMENTO",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_IDADE_DATA_POSSE",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_TITULO_ELEITORAL_CANDIDATO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_GENERO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_GENERO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_GRAU_INSTRUCAO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_GRAU_INSTRUCAO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_ESTADO_CIVIL",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_ESTADO_CIVIL",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_COR_RACA",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_COR_RACA",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_OCUPACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_OCUPACAO",
+						"type": "varchar"
+					},
+					{
+						"name": "VR_DESPESA_MAX_CAMPANHA",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_SIT_TOT_TURNO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_SIT_TOT_TURNO",
+						"type": "varchar"
+					},
+					{
+						"name": "ST_REELEICAO",
+						"type": "varchar"
+					},
+					{
+						"name": "ST_DECLARAR_BENS",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_PROTOCOLO_CANDIDATURA",
+						"type": "varchar"
+					},
+					{
+						"name": "NR_PROCESSO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_SITUACAO_CANDIDATO_PLEITO",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_SITUACAO_CANDIDATO_PLEITO",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_SITUACAO_CANDIDATO_URNA",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_SITUACAO_CANDIDATO_URNA",
+						"type": "varchar"
+					},
+					{
+						"name": "ST_CANDIDATO_INSERIDO_URNA",
+						"type": "varchar"
+					},
+					{
+						"name": "NM_TIPO_DESTINACAO_VOTOS",
+						"type": "varchar"
+					},
+					{
+						"name": "CD_SITUACAO_CANDIDATO_TOT",
+						"type": "varchar"
+					},
+					{
+						"name": "DS_SITUACAO_CANDIDATO_TOT",
+						"type": "varchar"
+					},
+					{
+						"name": "ST_PREST_CONTAS",
+						"type": "varchar"
+					},
+					{
+						"name": "ST_SUBSTITUIDO",
+						"type": "varchar"
+					},
+					{
+						"name": "SQ_SUBSTITUIDO",
+						"type": "varchar"
+					},
+					{
+						"name": "SQ_ORDEM_SUPLENCIA",
+						"type": "varchar"
+					},
+					{
+						"name": "DT_ACEITE_CANDIDATURA",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "TB_CANDIDATO"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_server_onpremise')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_datalake_depto_esportivo')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_datalake_depto_esportivo_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_datalake_depto_esportivo_accountKey')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_datalake_landing_zone')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_datalake_landing_zone_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_datalake_landing_zone_accountKey')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pip_importa_arquivo_candidato')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "cd_importa_arquivo_candidato",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "FileServerReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "SqlServerSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "DT_GERACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DT_GERACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "HH_GERACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "HH_GERACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "ANO_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ANO_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_TIPO_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_TIPO_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_TIPO_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_TIPO_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_TURNO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_TURNO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DT_ELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DT_ELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "TP_ABRANGENCIA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "TP_ABRANGENCIA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SG_UF",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SG_UF",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SG_UE",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SG_UE",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_UE",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_UE",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_CARGO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_CARGO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_CARGO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_CARGO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SQ_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SQ_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_URNA_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_URNA_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_SOCIAL_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_SOCIAL_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_CPF_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_CPF_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_EMAIL",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_EMAIL",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_SITUACAO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_SITUACAO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_SITUACAO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_SITUACAO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_DETALHE_SITUACAO_CAND",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_DETALHE_SITUACAO_CAND",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_DETALHE_SITUACAO_CAND",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_DETALHE_SITUACAO_CAND",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "TP_AGREMIACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "TP_AGREMIACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_PARTIDO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_PARTIDO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SG_PARTIDO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SG_PARTIDO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_PARTIDO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_PARTIDO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_FEDERACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_FEDERACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_FEDERACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_FEDERACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SG_FEDERACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SG_FEDERACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_COMPOSICAO_FEDERACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_COMPOSICAO_FEDERACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SQ_COLIGACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SQ_COLIGACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_COLIGACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_COLIGACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_COMPOSICAO_COLIGACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_COMPOSICAO_COLIGACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_NACIONALIDADE",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_NACIONALIDADE",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_NACIONALIDADE",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_NACIONALIDADE",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SG_UF_NASCIMENTO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SG_UF_NASCIMENTO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_MUNICIPIO_NASCIMENTO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_MUNICIPIO_NASCIMENTO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_MUNICIPIO_NASCIMENTO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_MUNICIPIO_NASCIMENTO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DT_NASCIMENTO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DT_NASCIMENTO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_IDADE_DATA_POSSE",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_IDADE_DATA_POSSE",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_TITULO_ELEITORAL_CANDIDATO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_TITULO_ELEITORAL_CANDIDATO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_GENERO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_GENERO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_GENERO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_GENERO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_GRAU_INSTRUCAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_GRAU_INSTRUCAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_GRAU_INSTRUCAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_GRAU_INSTRUCAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_ESTADO_CIVIL",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_ESTADO_CIVIL",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_ESTADO_CIVIL",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_ESTADO_CIVIL",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_COR_RACA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_COR_RACA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_COR_RACA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_COR_RACA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_OCUPACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_OCUPACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_OCUPACAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_OCUPACAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "VR_DESPESA_MAX_CAMPANHA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "VR_DESPESA_MAX_CAMPANHA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_SIT_TOT_TURNO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_SIT_TOT_TURNO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_SIT_TOT_TURNO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_SIT_TOT_TURNO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "ST_REELEICAO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ST_REELEICAO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "ST_DECLARAR_BENS",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ST_DECLARAR_BENS",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_PROTOCOLO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_PROTOCOLO_CANDIDATURA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NR_PROCESSO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NR_PROCESSO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_SITUACAO_CANDIDATO_PLEITO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_SITUACAO_CANDIDATO_PLEITO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_SITUACAO_CANDIDATO_PLEITO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_SITUACAO_CANDIDATO_PLEITO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_SITUACAO_CANDIDATO_URNA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_SITUACAO_CANDIDATO_URNA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_SITUACAO_CANDIDATO_URNA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_SITUACAO_CANDIDATO_URNA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "ST_CANDIDATO_INSERIDO_URNA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ST_CANDIDATO_INSERIDO_URNA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NM_TIPO_DESTINACAO_VOTOS",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "NM_TIPO_DESTINACAO_VOTOS",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "CD_SITUACAO_CANDIDATO_TOT",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CD_SITUACAO_CANDIDATO_TOT",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DS_SITUACAO_CANDIDATO_TOT",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DS_SITUACAO_CANDIDATO_TOT",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "ST_PREST_CONTAS",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ST_PREST_CONTAS",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "ST_SUBSTITUIDO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ST_SUBSTITUIDO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SQ_SUBSTITUIDO",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SQ_SUBSTITUIDO",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "SQ_ORDEM_SUPLENCIA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SQ_ORDEM_SUPLENCIA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "DT_ACEITE_CANDIDATURA",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "DT_ACEITE_CANDIDATURA",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_arquivo_candidato",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_sql_server_tb_candidato",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_arquivo_candidato')]",
+				"[concat(variables('factoryId'), '/datasets/ds_sql_server_tb_candidato')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_arquivo_depto_esportivo')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_datalake_depto_esportivo",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "catar2022_base_jogadores.csv",
+						"folderPath": "depto_esportivo",
+						"fileSystem": "adftreinamentoudemy"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "NOMJOGADOR;NUMCAMISA;NOMPOSICAO;NOMSELECAO",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_datalake_depto_esportivo')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_arquivo_landing_zone')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_datalake_landing_zone",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "candidato.csv",
+						"folderPath": "analytics/landing_zone",
+						"fileSystem": "adftreinamentoudemy"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_datalake_landing_zone')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pip_carga_arquivo_jogadores_copa')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "cd_arquivo_jogadores",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_arquivo_depto_esportivo",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_arquivo_landing_zone",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-08-08T04:04:58Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_arquivo_depto_esportivo')]",
+				"[concat(variables('factoryId'), '/datasets/ds_arquivo_landing_zone')]"
+			]
+		}
+	]
+}

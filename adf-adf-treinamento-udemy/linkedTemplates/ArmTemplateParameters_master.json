@@ -1,0 +1,39 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-adf-treinamento-udemy"
+		},
+		"ls_arquivo_candidao_password": {
+			"value": ""
+		},
+		"ls_datalake_depto_esportivo_accountKey": {
+			"value": ""
+		},
+		"ls_datalake_landing_zone_accountKey": {
+			"value": ""
+		},
+		"ls_sql_server_onpremise_connectionString": {
+			"value": ""
+		},
+		"ls_arquivo_candidao_properties_typeProperties_host": {
+			"value": "c:\\\\cursoADF"
+		},
+		"ls_arquivo_candidao_properties_typeProperties_userId": {
+			"value": "DESKTOP-GT679GD\\adf"
+		},
+		"ls_datalake_depto_esportivo_properties_typeProperties_url": {
+			"value": "https://asaadftreinamentoudemy.dfs.core.windows.net/"
+		},
+		"ls_datalake_landing_zone_properties_typeProperties_url": {
+			"value": "https://asaadftreinamentoudemy.dfs.core.windows.net/"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
