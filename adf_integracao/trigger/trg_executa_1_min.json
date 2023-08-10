@@ -3,7 +3,7 @@
 	"properties": {
 		"description": "Está trigger será executada a cada minuto",
 		"annotations": [],
-		"runtimeState": "Started",
+		"runtimeState": "Stopped",
 		"pipelines": [
 			{
 				"pipelineReference": {
